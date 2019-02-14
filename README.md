@@ -1,5 +1,14 @@
 # Mage helper
 
+## Installation
+
+```sh
+go get -u github.com/plimble/mage/...
+$GOPATH/src/github.com/plimble/mage/install
+```
+
+## Example
+
 ```go
 // +build mage
 
@@ -16,12 +25,14 @@ func Build() {
 	fmt.Println("Build Done")
 }
 
-func Deploy() {
-	Build()
-	sh.Exec("serverless deploy -v")
+func Version() {
+	sh.Exec("go version")
 }
+```
 
-func Remove() {
-	sh.Exec("serverless remove -v")
-}
+Run
+
+```sh
+mage build
+mage version
 ```
