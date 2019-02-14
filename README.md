@@ -20,8 +20,21 @@ import (
 	"github.com/plimble/mage/sh"
 )
 
-func Build() {
-	sh.BuildLinux(".", "./bin/app")
+type Build mg.Namespace
+
+func (Build) Linux() {
+	sh.BuildLinux(".", "./bin/app-linux")
+	fmt.Println("Build Done")
+}
+
+func (Build) Mac() {
+	sh.BuildMac(".", "./bin/app-mac")
+	fmt.Println("Build Done")
+}
+
+func (Build) All() {
+	Build{}.Linux()
+	Build{}.Mac()
 	fmt.Println("Build Done")
 }
 
@@ -33,6 +46,8 @@ func Version() {
 Run
 
 ```sh
-mage build
+mage build:linux
+mage build:mac
+mage build:all
 mage version
 ```
