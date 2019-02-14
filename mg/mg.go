@@ -1,12 +1,15 @@
-package sh
+package mg
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
+
+type Namespace = mg.Namespace
 
 type opts struct {
 	env map[string]string

@@ -17,18 +17,18 @@ package main
 import (
 	"fmt"
 
-	"github.com/plimble/mage/sh"
+	"github.com/plimble/mage/mg"
 )
 
 type Build mg.Namespace
 
 func (Build) Linux() {
-	sh.BuildLinux(".", "./bin/app-linux")
+	mg.BuildLinux(".", "./bin/app-linux")
 	fmt.Println("Build Done")
 }
 
 func (Build) Mac() {
-	sh.BuildMac(".", "./bin/app-mac")
+	mg.BuildMac(".", "./bin/app-mac")
 	fmt.Println("Build Done")
 }
 
@@ -39,7 +39,7 @@ func (Build) All() {
 }
 
 func Version() {
-	sh.Exec("go version")
+	mg.Exec("go version")
 }
 ```
 
