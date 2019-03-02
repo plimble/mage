@@ -57,9 +57,6 @@ func Exec(cmd string, options ...Options) {
 	for i := 0; i < len(cmdsplits); i++ {
 		cmdsplits[i] = strings.ReplaceAll(cmdsplits[i], `"`, "")
 	}
-	for i := 0; i < len(cmdsplits); i++ {
-		fmt.Println(cmdsplits[i])
-	}
 	if len(cmdsplits) == 1 {
 		_, err = sh.Exec(o.env, os.Stdout, os.Stderr, cmdsplits[0])
 	} else {
