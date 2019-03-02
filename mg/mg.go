@@ -45,6 +45,7 @@ func Exec(cmd string, options ...Options) {
 	}
 
 	exitn := sh.ExitStatus(err)
+
 	if exitn > 0 {
 		os.Exit(exitn)
 	}
