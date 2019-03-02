@@ -35,6 +35,9 @@ func Exec(cmd string, options ...Options) {
 
 	var err error
 	cmdsplits := strings.Split(cmd, " ")
+	for i := 0; i < len(cmdsplits); i++ {
+		cmdsplits[i] = strings.ReplaceAll(cmdsplits[i], `"`, "")
+	}
 	if len(cmdsplits) == 1 {
 		_, err = sh.Exec(o.env, os.Stdout, os.Stderr, cmdsplits[0])
 	} else {
@@ -48,17 +51,14 @@ func Exec(cmd string, options ...Options) {
 }
 
 func BuildLinux(path, output string) {
-	Exec(fmt.Sprintf("go build -o=%s %s", output, path),
-		WithEnv("GOARCH", "amd64"),
+	Exec(fmt.Sprintf("go build -a -installsuffix=cgo -o=%s %s", output, path),
+		WithEnv("CGO_ENABLED", "0"),
 		WithEnv("GOOS", "linux"),
 	)
 }
 
-func BuildMac(path, output string) {
-	Exec(fmt.Sprintf("go build -o=%s %s", output, path),
-		WithEnv("GOARCH", "amd64"),
-		WithEnv("GOOS", "darwin"),
-	)
+func Build(path, output string) {
+	Exec(fmt.Sprintf("go build -o=%s %s", output, path))
 }
 
 func GoGernerate() {
