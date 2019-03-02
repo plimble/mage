@@ -52,13 +52,13 @@ func Exec(cmd string, options ...Options) {
 }
 
 func BuildLinux(path, output string) {
-	Exec(fmt.Sprintf("go build -a -o=%s %s", output, path),
+	Exec(fmt.Sprintf("go build -o=%s %s", output, path),
 		WithEnv("GOOS", "linux"),
 	)
 }
 
 func Build(path, output string) {
-	Exec(fmt.Sprintf("go build -a -o=%s %s", output, path))
+	Exec(fmt.Sprintf("go build -o=%s %s", output, path))
 }
 
 func GoGernerate() {
