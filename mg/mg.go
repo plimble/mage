@@ -34,7 +34,26 @@ func Exec(cmd string, options ...Options) {
 	}
 
 	var err error
-	cmdsplits := strings.Split(cmd, " ")
+	// cmdsplits := strings.Fields(cmd)
+	var startQuote bool
+	cmdsplits := strings.FieldsFunc(cmd, func(s rune) bool {
+		if !startQuote && s == '"' {
+			startQuote = true
+			return false
+		}
+
+		if startQuote && s == '"' {
+			startQuote = false
+			return true
+		}
+
+		if !startQuote && s == ' ' {
+			return true
+		}
+
+		return false
+	})
+
 	for i := 0; i < len(cmdsplits); i++ {
 		cmdsplits[i] = strings.ReplaceAll(cmdsplits[i], `"`, "")
 	}
