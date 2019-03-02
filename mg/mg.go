@@ -34,7 +34,7 @@ func Exec(cmd string, options ...Options) {
 	}
 
 	var err error
-	// cmdsplits := strings.Fields(cmd)
+	cmd = strings.ReplaceAll(cmd, "=", " ")
 	var startQuote bool
 	cmdsplits := strings.FieldsFunc(cmd, func(s rune) bool {
 		if !startQuote && s == '"' {
@@ -44,7 +44,7 @@ func Exec(cmd string, options ...Options) {
 
 		if startQuote && s == '"' {
 			startQuote = false
-			return true
+			return false
 		}
 
 		if !startQuote && s == ' ' {
@@ -56,6 +56,9 @@ func Exec(cmd string, options ...Options) {
 
 	for i := 0; i < len(cmdsplits); i++ {
 		cmdsplits[i] = strings.ReplaceAll(cmdsplits[i], `"`, "")
+	}
+	for i := 0; i < len(cmdsplits); i++ {
+		fmt.Println(cmdsplits[i])
 	}
 	if len(cmdsplits) == 1 {
 		_, err = sh.Exec(o.env, os.Stdout, os.Stderr, cmdsplits[0])
