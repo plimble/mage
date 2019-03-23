@@ -1,40 +1,45 @@
 package mg
 
 import (
-	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/magefile/mage/mg"
-	"github.com/magefile/mage/sh"
 )
 
 type Namespace = mg.Namespace
 
-type opts struct {
-	env map[string]string
+func BuildLinux(path, output string) {
+	Exec("go", "build", `-ldflags="-w -s"`, "-o", output, path).
+		Env("GOOS", "linux").
+		Env("GOARCH", "amd64").
+		Run()
 }
 
-type Options func(o *opts)
+func Build(path, output string) {
+	Exec("go", "build", "-o", output, path).Run()
+}
 
-func WithEnv(key, value string) Options {
-	return func(o *opts) {
-		if o.env == nil {
-			o.env = make(map[string]string)
-		}
+func GoGernerate() {
+	Exec("go", "generate", "./...").Run()
+}
 
-		o.env[key] = value
+type execBuilder struct {
+	cmd  string
+	args []string
+	env  []string
+	dir  string
+}
+
+func Exec(cmd string, args ...string) *execBuilder {
+	return &execBuilder{
+		cmd:  cmd,
+		args: args,
 	}
 }
 
-func Exec(cmd string, options ...Options) {
-	o := &opts{}
-	for _, opt := range options {
-		opt(o)
-	}
-
-	var err error
-	cmd = strings.ReplaceAll(cmd, "=", " ")
+func ExecX(cmd string, args ...string) *execBuilder {
 	var startQuote bool
 	cmdsplits := strings.FieldsFunc(cmd, func(s rune) bool {
 		if !startQuote && s == '"' {
@@ -57,30 +62,42 @@ func Exec(cmd string, options ...Options) {
 	for i := 0; i < len(cmdsplits); i++ {
 		cmdsplits[i] = strings.ReplaceAll(cmdsplits[i], `"`, "")
 	}
+
 	if len(cmdsplits) == 1 {
-		_, err = sh.Exec(o.env, os.Stdout, os.Stderr, cmdsplits[0])
-	} else {
-		_, err = sh.Exec(o.env, os.Stdout, os.Stderr, cmdsplits[0], cmdsplits[1:]...)
+		return &execBuilder{
+			cmd: cmdsplits[0],
+		}
 	}
 
-	exitn := sh.ExitStatus(err)
-
-	if exitn > 0 {
-		os.Exit(exitn)
+	return &execBuilder{
+		cmd:  cmdsplits[0],
+		args: cmdsplits[1:],
 	}
 }
 
-func BuildLinux(path, output string) {
-	Exec(fmt.Sprintf(`go build -ldflags="-w -s" -o=%s %s`, output, path),
-		WithEnv("GOOS", "linux"),
-		WithEnv("GOARCH", "amd64"),
-	)
+func (b *execBuilder) Env(key, value string) *execBuilder {
+	b.env = append(b.env, key+"="+value)
+	return b
 }
 
-func Build(path, output string) {
-	Exec(fmt.Sprintf("go build -o=%s %s", output, path))
+func (b *execBuilder) Dir(path string) *execBuilder {
+	b.dir = path
+	return b
 }
 
-func GoGernerate() {
-	Exec("go generate ./...")
+func (b *execBuilder) Run() {
+	cmd := exec.Command(b.cmd, b.args...)
+	if len(b.env) > 0 {
+		cmd.Env = b.env
+	}
+	if b.dir != "" {
+		cmd.Dir = b.dir
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		os.Exit(1)
+	}
 }
