@@ -11,7 +11,7 @@ import (
 type Namespace = mg.Namespace
 
 func BuildLinux(path, output string) {
-	Exec("go", "build", `-ldflags="-w -s"`, "-o", output, path).
+	Exec("go", "build", "-ldflags", "-w -s", "-o", output, path).
 		Env("GOOS", "linux").
 		Env("GOARCH", "amd64").
 		Run()
