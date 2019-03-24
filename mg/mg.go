@@ -1,6 +1,7 @@
 package mg
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -11,7 +12,7 @@ import (
 type Namespace = mg.Namespace
 
 func BuildLinux(path, output string) {
-	Exec("go", "build", "-ldflags", "-w -s", "-o", output, path).
+	Exec("go", "build", "-ldflags=-w -s", "-o", output, path).
 		Env("GOOS", "linux").
 		Env("GOARCH", "amd64").
 		Run()
@@ -28,7 +29,7 @@ func GoGernerate() {
 type execBuilder struct {
 	cmd  string
 	args []string
-	env  []string
+	env  map[string]string
 	dir  string
 }
 
@@ -36,6 +37,7 @@ func Exec(cmd string, args ...string) *execBuilder {
 	return &execBuilder{
 		cmd:  cmd,
 		args: args,
+		env:  make(map[string]string),
 	}
 }
 
@@ -72,11 +74,12 @@ func ExecX(cmd string, args ...string) *execBuilder {
 	return &execBuilder{
 		cmd:  cmdsplits[0],
 		args: cmdsplits[1:],
+		env:  make(map[string]string),
 	}
 }
 
 func (b *execBuilder) Env(key, value string) *execBuilder {
-	b.env = append(b.env, key+"="+value)
+	b.env[key] = value
 	return b
 }
 
@@ -86,9 +89,17 @@ func (b *execBuilder) Dir(path string) *execBuilder {
 }
 
 func (b *execBuilder) Run() {
+	b.cmd = os.Expand(b.cmd, b.expand)
+	for i := range b.args {
+		b.args[i] = os.Expand(b.args[i], b.expand)
+	}
+
 	cmd := exec.Command(b.cmd, b.args...)
+	cmd.Env = os.Environ()
 	if len(b.env) > 0 {
-		cmd.Env = b.env
+		for _, v := range b.env {
+			cmd.Env = append(cmd.Env, v)
+		}
 	}
 	if b.dir != "" {
 		cmd.Dir = b.dir
@@ -98,6 +109,35 @@ func (b *execBuilder) Run() {
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
-		os.Exit(1)
+		code := ExitStatus(err)
+		fmt.Printf("running \"%s %s\" failed with exit code %d\n", b.cmd, strings.Join(b.args, " "), code)
+		os.Exit(code)
 	}
+}
+
+func (b *execBuilder) expand(s string) string {
+	s2, ok := b.env[s]
+	if ok {
+		return s2
+	}
+	return os.Getenv(s)
+}
+
+type exitStatus interface {
+	ExitStatus() int
+}
+
+func ExitStatus(err error) int {
+	if err == nil {
+		return 0
+	}
+	if e, ok := err.(exitStatus); ok {
+		return e.ExitStatus()
+	}
+	if e, ok := err.(*exec.ExitError); ok {
+		if ex, ok := e.Sys().(exitStatus); ok {
+			return ex.ExitStatus()
+		}
+	}
+	return 1
 }
