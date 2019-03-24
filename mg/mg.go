@@ -97,8 +97,8 @@ func (b *execBuilder) Run() {
 	cmd := exec.Command(b.cmd, b.args...)
 	cmd.Env = os.Environ()
 	if len(b.env) > 0 {
-		for _, v := range b.env {
-			cmd.Env = append(cmd.Env, v)
+		for k, v := range b.env {
+			cmd.Env = append(cmd.Env, k+"="+v)
 		}
 	}
 	if b.dir != "" {
