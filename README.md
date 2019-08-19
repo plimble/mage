@@ -23,7 +23,10 @@ import (
 type Build mg.Namespace
 
 func (Build) Linux() {
-	mg.BuildLinux(".", "./bin/app-linux")
+	// build with cgo
+	mg.BuildLinux(".", "./bin/app-linux", true)
+	// build with disabled cgo
+	mg.BuildLinux(".", "./bin/app-linux", false)
 	fmt.Println("Build Done")
 }
 

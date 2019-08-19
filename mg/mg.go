@@ -11,11 +11,19 @@ import (
 
 type Namespace = mg.Namespace
 
-func BuildLinux(path, output string) {
-	Exec("go", "build", "-ldflags=-w -s", "-o", output, path).
-		Env("GOOS", "linux").
-		Env("GOARCH", "amd64").
-		Run()
+func BuildLinux(path, output string, cgo bool) {
+	if cgo {
+		Exec("go", "build", "-ldflags=-w -s", "-o", output, path).
+			Env("GOOS", "linux").
+			Env("GOARCH", "amd64").
+			Run()
+	} else {
+		Exec("go", "build", "-ldflags=-w -s", "-o", output, path).
+			Env("CGO_ENABLED", "0").
+			Env("GOOS", "linux").
+			Env("GOARCH", "amd64").
+			Run()
+	}
 }
 
 func Build(path, output string) {
